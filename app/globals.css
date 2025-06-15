@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Discord colors */
+  --background: #36393f;
+  --foreground: #dcddde;
+  --channels-bg: #2f3136;
+  --sidebar-bg: #202225;
+  --primary: #7289da;
+  --primary-hover: #677bc4;
+  --green: #43b581;
+  --green-hover: #3ca374;
+  --message-hover: #32353b;
+  --input-bg: #40444b;
+  --header-bg: #36393f;
+  --header-border: #26282c;
+  --scrollbar-thumb: #202225;
+  --scrollbar-track: #2e3338;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Open Sans', 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Custom scrollbar for Discord look */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}
+
+/* Hide scrollbar on mobile */
+@media (max-width: 767px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+}
+
+/* Message styles */
+.message {
+  padding: 0.5rem 1rem;
+  margin: 0;
+  border-top: 1px solid transparent;
+}
+
+.message:hover {
+  background-color: var(--message-hover);
+}
+
+/* Input styles */
+.discord-input {
+  background-color: var(--input-bg);
+  border-radius: 8px;
+  border: none;
+  color: var(--foreground);
+}
+
+.discord-input:focus {
+  outline: none;
+}
+
+/* Button styles */
+.discord-button {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.discord-button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Fix for mobile viewport height issues */
+@supports (-webkit-touch-callout: none) {
+  .h-screen, .h-\[calc\(100vh-56px\)\], .h-\[calc\(100vh-48px\)\] {
+    height: -webkit-fill-available;
+  }
 }

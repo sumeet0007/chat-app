@@ -15,8 +15,28 @@ export default function ChatPage() {
   const [selectedFriend, setSelectedFriend] = useState<any>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [message, setMessage] = useState('');
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   const router = useRouter();
+
+  // Set sidebar visibility based on screen size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setShowSidebar(true);
+      } else {
+        setShowSidebar(false);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // User ID from session
   const userId = session?.user?.id || session?.user?.email;
@@ -127,17 +147,13 @@ export default function ChatPage() {
   if (!session) return null;
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      {/* Mobile Toggle Button */}
-      <button 
-        className="md:hidden bg-blue-600 text-white py-2 px-4 m-2 rounded-md"
-        onClick={() => setShowSidebar(!showSidebar)}
+    <div className="flex h-[calc(100vh-48px)] md:h-[calc(100vh-56px)] bg-[#36393f] overflow-hidden">
+      {/* Sidebar - fixed position on mobile */}
+      <aside 
+        className={`${
+          showSidebar ? 'fixed inset-0 z-20' : 'hidden'
+        } md:static md:block md:w-80 h-full overflow-hidden`}
       >
-        {showSidebar ? 'Hide Contacts' : 'Show Contacts'}
-      </button>
-
-      {/* Sidebar */}
-      <aside className={`${showSidebar ? 'block' : 'hidden'} md:block w-full md:w-1/4 bg-white overflow-y-auto sticky top-16`}>
         <Sidebar
           friends={friends}
           results={results}
@@ -151,7 +167,7 @@ export default function ChatPage() {
       </aside>
 
       {/* Main Chat Area */}
-      <main className={`${showSidebar ? 'hidden md:flex' : 'flex'} flex-1 flex-col p-3 md:p-6`}>
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
         <ChatArea
           selectedFriend={selectedFriend}
           messages={messages}
