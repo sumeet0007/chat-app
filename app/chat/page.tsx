@@ -21,22 +21,39 @@ export default function ChatPage() {
   // Set sidebar visibility based on screen size
   useEffect(() => {
     const handleResize = () => {
+      // Only update sidebar visibility based on width, not height changes
+      // This prevents the keyboard appearance from closing the sidebar
       if (window.innerWidth >= 768) {
         setShowSidebar(true);
-      } else {
+      } else if (!showSidebar) {
+        // Only set to false if it's not already showing
+        // This prevents the keyboard from closing an open sidebar
         setShowSidebar(false);
       }
     };
 
     // Set initial state
-    handleResize();
+    if (window.innerWidth >= 768) {
+      setShowSidebar(true);
+    }
 
+    // Store previous width to detect actual width changes
+    let prevWidth = window.innerWidth;
+    
     // Add event listener
-    window.addEventListener('resize', handleResize);
+    const resizeListener = () => {
+      // Only respond to width changes, not height changes (which happen when keyboard appears)
+      if (prevWidth !== window.innerWidth) {
+        prevWidth = window.innerWidth;
+        handleResize();
+      }
+    };
+    
+    window.addEventListener('resize', resizeListener);
     
     // Cleanup
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    return () => window.removeEventListener('resize', resizeListener);
+  }, [showSidebar]);
 
   // User ID from session
   const userId = session?.user?.id || session?.user?.email;
