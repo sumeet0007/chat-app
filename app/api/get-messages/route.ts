@@ -25,7 +25,7 @@ export async function GET(req: Request) {
       { from: user._id, to: friendId },
       { from: friendId, to: user._id },
     ],
-  }).sort({ createdAt: 1 });
+  }).sort({ timestamp: 1 });
 
   const formatted = messages.map((msg) => ({
     text: msg.text,
