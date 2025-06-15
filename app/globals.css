@@ -16,6 +16,7 @@
   --header-border: #26282c;
   --scrollbar-thumb: #202225;
   --scrollbar-track: #2e3338;
+  --vh: 1vh;
 }
 
 @theme inline {
@@ -25,12 +26,32 @@
   --font-mono: monospace;
 }
 
+html {
+  height: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Open Sans', 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
+  height: 100%;
+}
+
+/* Use custom height calculation for mobile */
+.h-full {
+  height: 100%;
+}
+
+.h-screen {
+  height: 100vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 100);
+}
+
+.h-\[calc\(100vh-48px\)\], .h-\[calc\(100vh-56px\)\] {
+  height: calc(100vh - 56px); /* Fallback */
+  height: calc(calc(var(--vh, 1vh) * 100) - 56px);
 }
 
 /* Custom scrollbar for Discord look */
@@ -99,11 +120,4 @@ body {
 
 .discord-button:hover {
   background-color: var(--primary-hover);
-}
-
-/* Fix for mobile viewport height issues */
-@supports (-webkit-touch-callout: none) {
-  .h-screen, .h-\[calc\(100vh-56px\)\], .h-\[calc\(100vh-48px\)\] {
-    height: -webkit-fill-available;
-  }
 }
