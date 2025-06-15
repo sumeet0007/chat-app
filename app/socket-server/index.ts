@@ -1,13 +1,13 @@
 import { Server } from 'socket.io';
 import http from 'http';
 
-const port = Number(process.env.PORT) || 3001;
-const host = '0.0.0.0';
+const port = process.env.PORT || 3001;
+const host = '0.0.0.0'; // ✅ Required by Render
 
 const server = http.createServer();
 const io = new Server(server, {
   cors: {
-    origin: 'https://chat-lab-green.vercel.app/',
+    origin: 'https://chat-lab-green.vercel.app', // your Vercel frontend URL
     methods: ['GET', 'POST'],
   },
 });
@@ -25,8 +25,6 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(port, host, () => {
+server.listen(port, Number(host), () => {
   console.log(`✅ Socket server running at http://${host}:${port}`);
 });
-
-export default io;
