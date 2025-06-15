@@ -1,7 +1,7 @@
 // app/lib/socket.ts
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3001', {
+const socket = io('https://socket-nhkk.onrender.com', {
   autoConnect: false, // so you control when it connects
   transports: ['websocket', 'polling'], // Try both transport methods
 });

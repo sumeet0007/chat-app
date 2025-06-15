@@ -1,11 +1,14 @@
-// socket-server/index.ts
 import { Server } from 'socket.io';
 import http from 'http';
+
+const port = Number(process.env.PORT) || 3001;
+const host = '0.0.0.0';
 
 const server = http.createServer();
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: 'https://chat-lab-green.vercel.app/',
+    methods: ['GET', 'POST'],
   },
 });
 
@@ -22,6 +25,8 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(3001, () => {
-  console.log('Socket server running on http://localhost:3001');
+server.listen(port, host, () => {
+  console.log(`✅ Socket server running at http://${host}:${port}`);
 });
+
+export default io;
