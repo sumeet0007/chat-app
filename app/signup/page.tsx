@@ -31,17 +31,24 @@ export default function SignupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-10 space-y-4">
-      <h2 className="text-xl font-bold">Sign Up</h2>
+<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
+  <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-8">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Create Your Account</h2>
+        <p className="text-sm text-gray-500 mt-1">Join our community today</p>
+      </div>
+
       <input
         type="text"
         name="name"
-        placeholder="Name"
+        placeholder="Full Name"
         value={form.name}
         onChange={handleChange}
         required
-        className="w-full p-2 border rounded"
+        className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
       />
+
       <input
         type="email"
         name="email"
@@ -49,8 +56,9 @@ export default function SignupForm() {
         value={form.email}
         onChange={handleChange}
         required
-        className="w-full p-2 border rounded"
+        className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
       />
+
       <input
         type="password"
         name="password"
@@ -58,12 +66,27 @@ export default function SignupForm() {
         value={form.password}
         onChange={handleChange}
         required
-        className="w-full p-2 border rounded"
+        className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
       />
-      {error && <p className="text-red-500">{error}</p>}
-      <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded">
+
+      {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+
+      <button
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md shadow transition duration-300"
+      >
         Sign Up
       </button>
     </form>
+
+    <p className="mt-6 text-center text-sm text-gray-600">
+      Already have an account?{' '}
+      <a href="/login" className="text-blue-600 hover:text-blue-500 font-medium">
+        Sign in
+      </a>
+    </p>
+  </div>
+</div>
+
   );
 }
