@@ -1,22 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import socket from '../lib/socket';
+import { socketManager } from '../lib/socketManager';
 import Sidebar from '../components/Sidebar';
 import ChatArea from '../components/ChatArea';
+import { useChatHooks } from '../hooks/useChatHooks';
+import { useStore } from '../store/useStore';
 
 export default function ChatPage() {
-  const { data: session, status } = useSession() as any;
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [friends, setFriends] = useState([]);
-  const [selectedFriend, setSelectedFriend] = useState<any>(null);
-  const [messages, setMessages] = useState<string[]>([]);
-  const [message, setMessage] = useState('');
-  const [showSidebar, setShowSidebar] = useState(false);
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const store = useStore();
+  const {
+    query,
+    setQuery,
+    searchResults,
+    message,
+    setMessage,
+    showSidebar,
+    setShowSidebar,
+    handleSearch,
+    handleSendMessage,
+    handleAddFriend,
+    loadMessages
+  } = useChatHooks();
+  
+  const { messages, friends, selectedFriend, setSelectedFriend, addMessage } = store;
 
   // Set sidebar visibility based on screen size
   useEffect(() => {
@@ -55,111 +66,51 @@ export default function ChatPage() {
     return () => window.removeEventListener('resize', resizeListener);
   }, [showSidebar]);
 
-  // User ID from session
-  const userId = session?.user?.id || session?.user?.email;
-
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/api/auth/signin');
+    if (status === 'unauthenticated') {
+      router.push('/api/auth/signin');
+    }
   }, [status, router]);
 
   useEffect(() => {
     if (!selectedFriend) return;
+    loadMessages(selectedFriend._id);
+  }, [selectedFriend, loadMessages]);
 
-    const fetchMessages = async () => {
-      try {
-        // Clear messages before fetching new ones
-        setMessages([]);
-        
-        const res = await fetch(`/api/get-messages?friendId=${selectedFriend._id}`);
-        const data = await res.json();
-        setMessages(data);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-      }
-    };
-    
-    fetchMessages();
-  }, [selectedFriend]);
-
-  const sendMessage = async () => {
-    if (!message.trim() || !selectedFriend) return;
-
-    // Send message to API for persistence
-    await fetch('/api/send-message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to: selectedFriend._id, text: message }),
-    });
-
-    // Emit message through socket for real-time delivery
-    const messageData = {
-      from: userId,
-      to: selectedFriend.email,
-      text: message,
-      senderName: session?.user?.name || session?.user?.email
-    };
-
-    if (!socket.connected) {
-      socket.connect();
-      socket.emit('join-room', userId);
-    }
-
-    socket.emit('send-message', messageData);
-
-    // Update local messages state
-    setMessages([...messages, `You: ${message}`]);
-    setMessage('');
-  };
-
-  const search = async () => {
-    const res = await fetch(`/api/search-users?q=${query}`);
-    const users = await res.json();
-    setResults(users);
-  };
-
-  const addFriend = async (email: string) => {
-    await fetch('/api/add-friend', {
-      method: 'POST',
-      body: JSON.stringify({ friendEmail: email }),
-    });
-    alert(`${email} added as friend!`);
-  };
-
+  // Handle socket connections
   useEffect(() => {
-    fetchFriends();
-  }, []);
+    if (!session?.user?.email) return;
 
-  const fetchFriends = async () => {
-    const res = await fetch('/api/get-friends');
-    const data = await res.json();
-    setFriends(data);
-  };
+    // Initialize socket connection
+    socketManager.connect(session.user.email);
 
-  useEffect(() => {
-    if (!session?.user) return;
+    // Handle incoming messages
+    socketManager.on('receive-message', (msg: { 
+      to: string; 
+      from: string; 
+      text: string; 
+      senderName?: string; 
+    }) => {
+      const userEmail = session?.user?.email;
+      if (!userEmail) return;
 
-    const userEmail = session.user.email;
-    socket.connect();
-
-    socket.on('connect', () => {
-      socket.emit('join-room', userEmail);
-    });
-
-    socket.off('receive-message');
-    socket.on('receive-message', (msg) => {
-      if (msg.to === userEmail &&
-        (msg.from === selectedFriend?.email || msg.from === selectedFriend?._id)) {
-        const senderName = msg.senderName || 'Friend';
-        const newMessage = `${senderName}: ${msg.text}`;
-        
-        setMessages((prev) => [...prev, newMessage]);
+      if (msg.to === userEmail && selectedFriend && 
+          (msg.from === selectedFriend.email || msg.from === selectedFriend._id)) {
+        addMessage({
+          _id: Date.now().toString(),
+          from: msg.from,
+          to: msg.to,
+          text: msg.text,
+          timestamp: new Date()
+        });
       }
     });
 
+    // Cleanup on unmount
     return () => {
-      socket.disconnect();
+      socketManager.disconnect();
     };
-  }, [session, selectedFriend]);
+  }, [session, selectedFriend, addMessage]);
 
   if (!session) return null;
 
@@ -173,11 +124,11 @@ export default function ChatPage() {
       >
         <Sidebar
           friends={friends}
-          results={results}
+          results={searchResults}
           query={query}
           setQuery={setQuery}
-          search={search}
-          addFriend={addFriend}
+          search={handleSearch}
+          addFriend={handleAddFriend}
           setSelectedFriend={setSelectedFriend}
           setShowSidebar={setShowSidebar}
         />
@@ -187,8 +138,11 @@ export default function ChatPage() {
       <main className="flex-1 flex flex-col h-full overflow-hidden">
         <ChatArea
           selectedFriend={selectedFriend}
-          messages={messages}
-          sendMessage={sendMessage}
+          messages={messages.map(m => {
+            const userEmail = session?.user?.email;
+            return `${m.from === userEmail ? 'You' : 'Friend'}: ${m.text}`;
+          })}
+          sendMessage={handleSendMessage}
           message={message}
           setMessage={setMessage}
           setShowSidebar={setShowSidebar}
